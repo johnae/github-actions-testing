@@ -23,7 +23,7 @@ jobs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
-    - name: Commit and push ${{ inputs.environment }} release version ${{
+    - name: Commit and push ${{ inputs.environment }} release
       run: |
         echo update "releases/$ENVIRONMENT/version" to "$VERSION"
         mkdir -p releases/"$ENVIRONMENT"
