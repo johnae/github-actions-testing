@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to create a release for'
+          description: Environment to create a release for
         type: environment
         required: true
 
@@ -36,7 +36,6 @@ jobs:
       id: cpr
       with:
         commit-message: [${{ inputs.environment }}] update release version
-        ## limit the paths committed (if there happens to be other changes somehow)
         add-paths: |
           releases/*/version
         committer: GitHub <noreply@github.com>
