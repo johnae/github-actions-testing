@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to create a release for'
+        type: environment
+        required: true
+
+jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+        echo build image and push to "$ENVIRONMENT"
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+    - run: |
+        echo update "releases/$ENVIRONMENT/version"
+        echo commit and push
+    - run: |
+        echo deploy "$ENVIRONMENT"
+        gh workflow run deployment.yaml -f environment="$ENVIRONMENT"
