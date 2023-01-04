@@ -35,7 +35,6 @@ jobs:
       uses: peter-evans/create-pull-request@v4
       id: cpr
       with:
-        #token: 
         commit-message: [${{ inputs.environment }}] update release version
         ## limit the paths committed (if there happens to be other changes somehow)
         add-paths: |
