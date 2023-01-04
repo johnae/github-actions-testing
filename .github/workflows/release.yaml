@@ -42,6 +42,7 @@ jobs:
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         signoff: false
         branch: ${{ inputs.environment }}/release
+        title: '[${{ inputs.environment }}] update release version'
         body: ''
         labels: |
           ${{ inputs.environment }}
