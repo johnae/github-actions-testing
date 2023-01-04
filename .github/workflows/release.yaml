@@ -9,25 +9,54 @@ on:
         required: true
 
 jobs:
-  log-the-inputs:
+  create-release:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
     - uses: actions/checkout@v3
-    - run: |
+    - name: Build image
+      run: |
         echo build image and push to "$ENVIRONMENT"
+        echo creating DUMMY version
+        version="$(openssl rand -hex 4)"
+        echo "VERSION=$version" >> "$GITHUB_ENV"
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
-    - run: |
-        echo update "releases/$ENVIRONMENT/version"
-        echo commit and push
+    - name: Commit and push ${{ inputs.environment }} release version ${{
+      run: |
+        echo update "releases/$ENVIRONMENT/version" to "$VERSION"
+        mkdir -p releases/"$ENVIRONMENT"
+        echo "$VERSION" > releases/"$ENVIRONMENT"/version
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
-    - run: |
-        echo deploy "$ENVIRONMENT"
-        gh workflow run deployment.yaml -f environment="$ENVIRONMENT"
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-        GH_TOKEN: ${{ github.token }}
+    - name: Create Release PR
+      uses: peter-evans/create-pull-request@v4
+      id: cpr
+      with:
+        #token: 
+        commit-message: [${{ inputs.environment }}] update release version
+        ## limit the paths committed (if there happens to be other changes somehow)
+        add-paths: |
+          releases/*/version
+        committer: GitHub <noreply@github.com>
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        signoff: false
+        branch: ${{ inputs.environment }}/release
+        body: ''
+        labels: |
+          ${{ inputs.environment }}
+          release
+        team-reviewers: |
+          owners
+          maintainers
+
+    - name: Enable Pull Request Automerge
+      if: |
+        steps.cpr.outputs.pull-request-operation == 'created' &&
+        inputs.environment == 'development'
+      uses: peter-evans/enable-pull-request-automerge@v2
+      with:
+        pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+        merge-method: squash
