@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-          description: Environment to create a release for
+        description: Environment to create a release for
         type: environment
         required: true
 
