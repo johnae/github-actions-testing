@@ -35,7 +35,7 @@ jobs:
       uses: peter-evans/create-pull-request@v4
       id: cpr
       with:
-        commit-message: [${{ inputs.environment }}] update release version
+        commit-message: '[${{ inputs.environment }}] update release version'
         add-paths: |
           releases/*/version
         committer: GitHub <noreply@github.com>
