@@ -17,3 +17,6 @@ jobs:
     - run: |
         echo deploy "$ENVIRONMENT"
         echo version "$(cat releases/$ENVIRONMENT/version)"
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        GH_TOKEN: ${{ github.token }}

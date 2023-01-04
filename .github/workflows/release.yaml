@@ -18,9 +18,16 @@ jobs:
         echo build image and push to "$ENVIRONMENT"
       env:
         ENVIRONMENT: ${{ inputs.environment }}
+        GH_TOKEN: ${{ github.token }}
     - run: |
         echo update "releases/$ENVIRONMENT/version"
         echo commit and push
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        GH_TOKEN: ${{ github.token }}
     - run: |
         echo deploy "$ENVIRONMENT"
         gh workflow run deployment.yaml -f environment="$ENVIRONMENT"
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        GH_TOKEN: ${{ github.token }}
