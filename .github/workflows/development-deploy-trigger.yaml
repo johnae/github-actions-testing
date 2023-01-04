@@ -1,0 +1,18 @@
+name: Trigger deploy on development version change
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+      - 'releases/development/version'
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        gh workflow run deployment.yaml -f environment="$ENVIRONMENT"
+      env:
+        ENVIRONMENT: development
+        GH_TOKEN: ${{ github.token }}
