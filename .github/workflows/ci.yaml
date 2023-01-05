@@ -1,12 +1,14 @@
 name: CI
 
 on:
-  pull_request: {}
+  pull_request:
+    paths-ignore:
+    - releases/**
   push:
     branches:
     - main
     paths-ignore:
-    - releases/*
+    - releases/**
 
 jobs:
   build:
