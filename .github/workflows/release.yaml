@@ -31,10 +31,17 @@ jobs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
+
+    - uses: tibdex/github-app-token@v1
+      id: generate-token
+      with:
+        app_id: ${{ secrets.APP_ID }}
+        private_key: ${{ secrets.APP_PRIVATE_KEY }}
     - name: Create Release PR
       uses: peter-evans/create-pull-request@v4
       id: cpr
       with:
+        token: ${{ steps.generate-token.outputs.token }}
         commit-message: '[${{ inputs.environment }}] update release version'
         add-paths: |
           releases/*/version
