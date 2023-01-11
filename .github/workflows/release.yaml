@@ -9,7 +9,7 @@ on:
         required: true
       promote:
         description: Environment to promote to given one
-        type: string
+        type: environment
         required: false
 
 jobs:
