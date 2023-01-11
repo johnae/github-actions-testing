@@ -7,20 +7,33 @@ on:
         description: Environment to create a release for
         type: environment
         required: true
+      promote:
+        description: Environment to promote to given one
+        type: string
+        required: false
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
     steps:
     - uses: actions/checkout@v3
     - name: Build image
+      if: inputs.promote == ''
       run: |
         echo build image and push to "$ENVIRONMENT"
-        echo creating DUMMY version
         version="$(openssl rand -hex 4)"
         echo "VERSION=$version" >> "$GITHUB_ENV"
       env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        GH_TOKEN: ${{ github.token }}
+    - name: Promote image
+      if: inputs.promote != ''
+      run: |
+        echo sync image from "$PROMOTE" to "$ENVIRONMENT"
+        version="$(<releases/"$PROMOTE"/version)"
+        echo "VERSION=$version" >> "$GITHUB_ENV"
+      env:
+        PROMOTE: ${{ inputs.promote }}
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
     - name: Commit and push ${{ inputs.environment }} release
