@@ -69,9 +69,7 @@ jobs:
         merge-method: squash
 
     - name: Auto approve PRs to development environment
-      if: |
-        steps.cpr.outputs.pull-request-operation == 'created' &&
-        inputs.environment == 'development'
+      if: inputs.environment == 'development'
       uses: hmarr/auto-approve-action@v3
       with:
         github-token: ${{ steps.generate-token.outputs.token }}
