@@ -1,11 +1,11 @@
-name: Trigger deploy on staging version change
+name: Trigger deploy on test version change
 
 on:
   push:
     branches:
     - main
     paths:
-      - 'releases/staging/version'
+      - 'releases/test/version'
 
 jobs:
   trigger-deploy:
@@ -15,5 +15,5 @@ jobs:
     - run: |
         gh workflow run deployment.yaml -f environment="$ENVIRONMENT"
       env:
-        ENVIRONMENT: staging
+        ENVIRONMENT: test
         GH_TOKEN: ${{ github.token }}
