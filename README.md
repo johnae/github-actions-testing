@@ -1,3 +1,3 @@
 # github-actions-testing
 
-This isn't very interesting, just a testing groun for github actions.
+This isn't very interesting, just a testing ground for github actions.
