@@ -15,7 +15,7 @@ on:
       promote_release_from:
         description: Environment to promote from
         type: environment
-        required: true
+        required: false
 
 jobs:
   create-release:
