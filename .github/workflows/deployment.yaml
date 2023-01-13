@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: |
-        echo deploy version "$(cat releases/$ENVIRONMENT/version)" "$ENVIRONMENT"
-        echo version "$(cat releases/$ENVIRONMENT/version)"
+        echo deploy version "$(cat releases/"$ENVIRONMENT"/version)" "$ENVIRONMENT"
+        echo version "$(cat releases/"$ENVIRONMENT"/version)"
       env:
         ENVIRONMENT: ${{ inputs.environment }}
