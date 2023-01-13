@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build image
-      if: inputs.build_new_release == 'true'
+      if: inputs.build_new_release
       run: |
         echo build image and push to "$ENVIRONMENT"
         version="$(openssl rand -hex 4)"
@@ -32,13 +32,13 @@ jobs:
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
     - name: Promote image
-      if: inputs.build_new_release != 'true'
+      if: !inputs.build_new_release
       run: |
         echo sync image from "$PROMOTE" to "$ENVIRONMENT"
         version="$(<releases/"$PROMOTE"/version)"
         echo "VERSION=$version" >> "$GITHUB_ENV"
       env:
-        PROMOTE: ${{ inputs.promote }}
+        PROMOTE: ${{ inputs.promote_release_from }}
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
     - name: Commit and push ${{ inputs.environment }} release
