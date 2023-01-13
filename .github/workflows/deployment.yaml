@@ -12,6 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    concurrency: ${{ inputs.environment }} ## only one deploy at a time please
     steps:
     - uses: actions/checkout@v3
     - run: |
