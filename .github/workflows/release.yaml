@@ -32,7 +32,7 @@ jobs:
         ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ github.token }}
     - name: Promote image
-      if: ! ${{ inputs.build_new_release }}
+      if: ${{ ! inputs.build_new_release }}
       run: |
         echo sync image from "$PROMOTE" to "$ENVIRONMENT"
         version="$(<releases/"$PROMOTE"/version)"
