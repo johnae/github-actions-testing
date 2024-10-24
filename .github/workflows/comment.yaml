@@ -33,6 +33,7 @@ jobs:
       statuses: write
 
     steps:
+      - uses: actions/checkout@v4
       - name: set vars
         id: build_vars
         uses: ./.github/actions/set-build-variables
