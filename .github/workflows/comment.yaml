@@ -1,0 +1,68 @@
+name: PR Comment Action
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  trigger:
+    name: PR Comment Trigger
+    runs-on: ubuntu-latest
+
+    if: |
+      github.event.issue.pull_request && startswith(github.event.comment.body, '/deploy')
+
+    # outputs:
+    #   image_tag: ${{ steps.build_variables.outputs.image_tag }}
+    #   pr_head_sha: ${{ steps.build_variables.outputs.pr_head_sha }}
+    #   pr_num: ${{ steps.build_variables.outputs.pr_num }}
+    #   docker_repository: ${{ steps.build_variables.outputs.docker_repository }}
+
+    permissions:
+      actions: read
+      checks: write
+      contents: read
+      deployments: read
+      issues: write
+      discussions: read
+      packages: write
+      pages: none
+      pull-requests: write
+      repository-projects: none
+      statuses: write
+
+    steps:
+      - name: dump variables
+        run: |
+          echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
+          env
+          echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
+          echo ${{ toJson(github) }} | jq .
+          
+      # ## note: since this is triggered by commenting, the default branch will be checked out here
+      # ## so that means the workflow itself MUST be in main or it won't run. 
+      # ## This is the reason for triggering another workflow here on the correct branch/pr so that
+      # ## we can test changes to that workflow on a branch.
+      # - uses: actions/checkout@v4
+      #   name: Initial checkout
+
+      # - uses: ./.github/actions/set-build-variables
+      #   name: Build variables
+      #   id: build_variables
+      #   with:
+      #     build_type: feature
+
+      # - name: Notify Start
+      #   uses: ./.github/actions/notify
+      #   with:
+      #     pr_num: ${{ steps.build_variables.outputs.pr_num }}
+      #     pr_head_sha: ${{ steps.build_variables.outputs.pr_head_sha }}
+      #     status: pending
+      #     description: Starting build of this PR
+      #     job_description: PR Build
+      #     notify_type: both
+
+      # - name: Trigger test deploy
+      #   run: |
+      #     gh workflow run test_deploy.yaml --ref ${{ steps.build_variables.outputs.pr_head_ref }}
