@@ -38,6 +38,7 @@ jobs:
         uses: ./.github/actions/set-build-variables
         with:
           build_type: feature
+
       - name: dump variables
         run: |
           echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
@@ -46,8 +47,6 @@ jobs:
           env
           echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
           echo '${{ toJson(github) }}' | jq .
-
-      - name:
           
       # ## note: since this is triggered by commenting, the default branch will be checked out here
       # ## so that means the workflow itself MUST be in main or it won't run. 
