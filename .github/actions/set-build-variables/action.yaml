@@ -71,7 +71,7 @@ runs:
         echo "PR_HEAD_REF: $PR_HEAD_REF"
         echo "PR_HEAD_SHA: $PR_HEAD_SHA"
         echo "PR_NUM: $PR_NUM"
-        if [ -z "$PR_HEAD_SHA" ] || [ -z "$PR_NUM" ] || [ -z "$PR_HEAD_REF"] ; then
+        if [ -z "$PR_HEAD_SHA" ] || [ -z "$PR_NUM" ] || [ -z "$PR_HEAD_REF" ] ; then
           echo using the default branch pr context
           LATEST_MERGED_FEATURE_PR="$(git log --format='%H %s' --perl-regexp --author='^((?!volvo-github-actions-app\[bot\]).*)$' -n 1)"
           echo "$LATEST_MERGED_FEATURE_PR"
