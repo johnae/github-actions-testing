@@ -38,7 +38,7 @@ jobs:
           echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
           env
           echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
-          echo ${{ toJson(github) }} | jq .
+          echo '${{ toJson(github) }}' | jq .
           
       # ## note: since this is triggered by commenting, the default branch will be checked out here
       # ## so that means the workflow itself MUST be in main or it won't run. 
