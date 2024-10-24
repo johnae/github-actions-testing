@@ -33,12 +33,21 @@ jobs:
       statuses: write
 
     steps:
+      - name: set vars
+        id: build_vars
+        uses: ./.github/actions/set-build-variables
+        with:
+          build_type: feature
       - name: dump variables
         run: |
+          echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
+          echo '${{ toJson(steps.build_vars.outputs) }}' | jq .
           echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
           env
           echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
           echo '${{ toJson(github) }}' | jq .
+
+      - name:
           
       # ## note: since this is triggered by commenting, the default branch will be checked out here
       # ## so that means the workflow itself MUST be in main or it won't run. 

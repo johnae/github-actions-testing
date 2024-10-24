@@ -1,0 +1,94 @@
+name: Build Variables
+description: Sets the contextual build variables, for main - the latest merged PR, for a PR issue comment - the PR that was commented, for a pull request event, the PR itself
+inputs:
+  build_type:
+    description: The type of build we're doing, used for naming and identifying an artifact - i.e, more specifically, the image_tag that is set here (should be either "feature" or "release")
+    required: true
+outputs:
+  pr_head_ref:
+    description: The contextual PR:s ref - can be set to main if this is just figuring out what the last PR merged to main was
+  pr_head_sha:
+    description: The contextual PR:s SHA - can be empty when last commit on default branch was not a PR
+    value: ${{ steps.build_vars.outputs.pr_head_sha }}
+  pr_short_sha:
+    description: The contextual PR short 7 char SHA - can be empty when last commit on default branch was not a PR
+    value: ${{ steps.build_vars.outputs.pr_short_sha }}
+  pr_num:
+    description: The contextual PR number - can be empty when last commit on default branch was not a PR
+    value: ${{ steps.build_vars.outputs.pr_num }}
+  timestamp:
+    description: A timestamp that may be used for identifying the time at which this build ran
+    value: ${{ steps.build_vars.outputs.timestamp }}
+  image_tag:
+    description: An image tag that may be used for uniquely identifying the image built as a result of a successful build
+    value: ${{ steps.build_vars.outputs.image_tag }}
+  docker_repository:
+    description: The default docker repository on github to use
+    value: ${{ steps.build_vars.outputs.docker_repository }}
+
+runs:
+  using: composite
+  steps:
+    - name: PR Issue Check
+      if: ${{ github.event.issue.pull_request && github.event_name == 'issue_comment' }} ## only interested in comments on PR:s here
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo issue check
+        GITHUB_ISSUE_EVENT_PATH="$(mktemp /tmp/github_issue.XXXXXXX.json)"
+        if gh pr view ${{ github.event.issue.number }} --json id,number,headRefOid,headRefName > "$GITHUB_ISSUE_EVENT_PATH"; then
+            PR_HEAD_REF="$(jq -r .headRefName "$GITHUB_ISSUE_EVENT_PATH")"
+            PR_HEAD_SHA="$(jq -r .headRefOid "$GITHUB_ISSUE_EVENT_PATH")"
+            PR_NUM="${{ github.event.issue.number }}"
+            echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
+            echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
+            echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
+        fi
+
+    - name: PR Check
+      if: ${{ github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo pr check
+        PR_HEAD_REF="${{ github.event.pull_request.head.ref }}"
+        PR_HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+        PR_NUM="${{ github.event.pull_request.number }}"
+        echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
+        echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
+        echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
+
+    - name: Set build variables
+      id: build_vars
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        OWNER: ${{ github.repository_owner }}
+      run: |
+        echo running final check
+        echo "PR_HEAD_REF: $PR_HEAD_REF"
+        echo "PR_HEAD_SHA: $PR_HEAD_SHA"
+        echo "PR_NUM: $PR_NUM"
+        if [ -z "$PR_HEAD_SHA" ] || [ -z "$PR_NUM" ] || [ -z "$PR_HEAD_REF"] ; then
+          echo using the default branch pr context
+          LATEST_MERGED_FEATURE_PR="$(git log --format='%H %s' --perl-regexp --author='^((?!volvo-github-actions-app\[bot\]).*)$' -n 1)"
+          echo "$LATEST_MERGED_FEATURE_PR"
+          PR_HEAD_REF="main"
+          PR_NUM="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $(NF)}' | grep -o '(#[0-9]\+)' | grep -o '[0-9]\+' || echo "0")"
+          PR_HEAD_SHA="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $1}')"
+        fi
+
+        PR_SHORT_SHA="${PR_HEAD_SHA::7}"
+        TIMESTAMP="$(date +'%Y%m%dT%H%M%S')"
+
+        {
+          echo docker_repository="ghcr.io/${OWNER,,}"
+          echo timestamp="$TIMESTAMP"
+          echo pr_head_ref="$PR_HEAD_REF"
+          echo pr_head_sha="$PR_HEAD_SHA"
+          echo pr_short_sha="$PR_SHORT_SHA"
+          echo pr_num="$PR_NUM"
+          echo image_tag=${{ inputs.build_type }}."$TIMESTAMP".p"$PR_NUM".b"$GITHUB_RUN_NUMBER"."$PR_SHORT_SHA"
+        } | tee -a "$GITHUB_OUTPUT"
