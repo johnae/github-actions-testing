@@ -12,10 +12,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
+    steps:         
      - uses: actions/checkout@v4
+     - name: Deploy pending status
+       env:
+         GH_TOKEN: ${{ github.token }}
+       run: |
+         gh api -X POST \
+          repos/{owner}/{repo}/statuses/"$GITHUB_SHA" \
+          -f state="pending" \
+          -f context="$GITHUB_WORKFLOW" \
+          -f description="Test deployment." \
+          -f target_url="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
  
-     - name: check checkout 1
+     - name: check checkout
        run: |
          git status
  
@@ -24,16 +34,7 @@ jobs:
        uses: ./.github/actions/set-build-variables
        with:
          build_type: feature
- 
-     - uses: actions/checkout@v4
-       name: Checkout PR
-       with:
-         ref: ${{ steps.build_vars.outputs.pr_head_sha }}
- 
-     - name: check checkout 2
-       run: |
-         git status
- 
+     
      - name: dump variables
        run: |
          echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
@@ -42,3 +43,61 @@ jobs:
          env
          echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
          echo '${{ toJson(github) }}' | jq .
+
+  summarize:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Build (matrix)
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Successful status report
+        if: ${{ needs.build.result == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X POST \
+           repos/{owner}/{repo}/statuses/"$GITHUB_SHA" \
+           -f state="success" \
+           -f context="$GITHUB_WORKFLOW" \
+           -f description="Test deployment successful. Available at: https://hello.world/blah" \
+           -f target_url="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
+
+      - name: Failed status report
+        if: ${{ needs.build.result != 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X POST \
+           repos/{owner}/{repo}/statuses/"$GITHUB_SHA" \
+           -f state="failure" \
+           -f context="$GITHUB_WORKFLOW" \
+           -f description="Test deployment failed." \
+           -f target_url="https://github.com/${{ github.repository }}/actions/runs/$GITHUB_RUN_ID"
+
+      # - name: Failed deployment
+      #   if: ${{ needs.build.result != 'success' }}
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #   run: |
+      #     gh api -X POST \
+      #      -H "Accept: application/vnd.github.v3+json" \
+      #      "/repos/:owner/:repo/statuses/$GITHUB_SHA" \
+      #      -f state="failure" \
+      #      -f context="test-deploy" \
+      #      -f description="Test deployment failed." \
+      #      -f target_url="https://github.com/:owner/:repo/actions/runs/$GITHUB_RUN_ID"
+      #     exit 1
+      # - name: Successful deployment
+      #   if: ${{ needs.nix_check.result == 'success' }}
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #   run: |
+      #     gh api -X POST \
+      #      -H "Accept: application/vnd.github.v3+json" \
+      #      "/repos/:owner/:repo/statuses/$GITHUB_SHA" \
+      #      -f state="success" \
+      #      -f context="test-deploy" \
+      #      -f description="Test deployment successful." \
+      #      -f target_url="https://github.com/:owner/:repo/actions/runs/$GITHUB_RUN_ID"
+      #     exit 0
