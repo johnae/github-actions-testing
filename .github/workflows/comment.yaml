@@ -50,6 +50,8 @@ jobs:
           echo '${{ toJson(github) }}' | jq .
 
       - name: Trigger test deploy workflow from the PR branch
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo '{"terraform": ${{ contains(github.event.comment.body, 'terraform') }}}' | \
            gh workflow run deployment.yaml --ref ${{ steps.build_vars.outputs.pr_head_ref }}
