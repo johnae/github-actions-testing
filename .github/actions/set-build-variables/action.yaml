@@ -7,6 +7,7 @@ inputs:
 outputs:
   pr_head_ref:
     description: The contextual PR:s ref - can be set to main if this is just figuring out what the last PR merged to main was
+    value: ${{ steps.build_vars.outputs.pr_head_ref }}
   pr_head_sha:
     description: The contextual PR:s SHA - can be empty when last commit on default branch was not a PR
     value: ${{ steps.build_vars.outputs.pr_head_sha }}
