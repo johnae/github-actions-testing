@@ -3,16 +3,15 @@ name: Deployment
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy to'
-        type: environment
+      terraform:
+        description: 'Should we terraform'
+        type: boolean
         required: true
+        default: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    concurrency: ${{ inputs.environment }} ## only one deploy at a time please
     steps:
      - uses: actions/checkout@v4
  
