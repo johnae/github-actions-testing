@@ -68,7 +68,23 @@ runs:
         GH_TOKEN: ${{ github.token }}
         OWNER: ${{ github.repository_owner }}
       run: |
-        echo running final check
+        echo running final checks
+        echo "PR_HEAD_REF: $PR_HEAD_REF"
+        echo "PR_HEAD_SHA: $PR_HEAD_SHA"
+        echo "PR_NUM: $PR_NUM"
+        CHECKED_OUT_BRANCH="$(git branch --show-current)"
+        if [ -n "$CHECKED_OUT_BRANCH" ]; then
+          GITHUB_PR_PATH="$(mktemp /tmp/github_pr.XXXXXXX.json)"
+          if gh pr view "$CHECKED_OUT_BRANCH" --json id,number,headRefOid,headRefName > "$GITHUB_PR_PATH"; then
+              PR_HEAD_REF="$(jq -r .headRefName "$GITHUB_PR_PATH")"
+              PR_HEAD_SHA="$(jq -r .headRefOid "$GITHUB_PR_PATH")"
+              PR_NUM="$(jq -r .number "$GITHUB_PR_PATH")"
+              echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
+              echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
+              echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
+          fi
+        fi
+        echo possibly defaulting to last merged pr
         echo "PR_HEAD_REF: $PR_HEAD_REF"
         echo "PR_HEAD_SHA: $PR_HEAD_SHA"
         echo "PR_NUM: $PR_NUM"
