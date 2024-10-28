@@ -48,7 +48,7 @@ jobs:
           env
           echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
           echo '${{ toJson(github) }}' | jq .
- 
+
       - name: Trigger test deploy workflow from the PR branch
         run: |
           echo '{"terraform": ${{ contains(github.event.comment.body, 'terraform') }}}' | \
@@ -76,7 +76,3 @@ jobs:
       #     description: Starting build of this PR
       #     job_description: PR Build
       #     notify_type: both
-
-      # - name: Trigger test deploy
-      #   run: |
-      #     gh workflow run test_deploy.yaml --ref ${{ steps.build_variables.outputs.pr_head_ref }}
