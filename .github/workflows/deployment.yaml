@@ -14,9 +14,32 @@ jobs:
     environment: ${{ inputs.environment }}
     concurrency: ${{ inputs.environment }} ## only one deploy at a time please
     steps:
-    - uses: actions/checkout@v3
-    - run: |
-        echo deploy version "$(cat releases/"$ENVIRONMENT"/version)" "$ENVIRONMENT"
-        echo version "$(cat releases/"$ENVIRONMENT"/version)"
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
+     - uses: actions/checkout@v4
+ 
+     - name: check checkout 1
+       run: |
+         git status
+ 
+     - name: set vars
+       id: build_vars
+       uses: ./.github/actions/set-build-variables
+       with:
+         build_type: feature
+ 
+     - uses: actions/checkout@v4
+       name: Checkout PR
+       with:
+         ref: ${{ steps.build_vars.outputs.pr_head_sha }}
+ 
+     - name: check checkout 2
+       run: |
+         git status
+ 
+     - name: dump variables
+       run: |
+         echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
+         echo '${{ toJson(steps.build_vars.outputs) }}' | jq .
+         echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
+         env
+         echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
+         echo '${{ toJson(github) }}' | jq .
