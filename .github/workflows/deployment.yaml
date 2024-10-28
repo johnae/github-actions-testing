@@ -13,33 +13,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
-    - uses: actions/checkout@v4
-
-    - name: check checkout 1
-      run: |
-        git status
-
-    - name: set vars
-      id: build_vars
-      uses: ./.github/actions/set-build-variables
-      with:
-        build_type: feature
-
-    - uses: actions/checkout@v4
-      name: Checkout PR
-      with:
-        ref: ${{ steps.build_variables.outputs.pr_head_sha }}
-
-    - name: check checkout 2
-      run: |
-        git status
-
-    - name: dump variables
-      run: |
-        echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
-        echo '${{ toJson(steps.build_vars.outputs) }}' | jq .
-        echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
-        env
-        echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
-        echo '${{ toJson(github) }}' | jq .
+     - uses: actions/checkout@v4
+ 
+     - name: check checkout 1
+       run: |
+         git status
+ 
+     - name: set vars
+       id: build_vars
+       uses: ./.github/actions/set-build-variables
+       with:
+         build_type: feature
+ 
+     - uses: actions/checkout@v4
+       name: Checkout PR
+       with:
+         ref: ${{ steps.build_vars.outputs.pr_head_sha }}
+ 
+     - name: check checkout 2
+       run: |
+         git status
+ 
+     - name: dump variables
+       run: |
+         echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
+         echo '${{ toJson(steps.build_vars.outputs) }}' | jq .
+         echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
+         env
+         echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
+         echo '${{ toJson(github) }}' | jq .
