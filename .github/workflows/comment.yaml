@@ -20,7 +20,7 @@ jobs:
     #   docker_repository: ${{ steps.build_variables.outputs.docker_repository }}
 
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: read
       deployments: read
