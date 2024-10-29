@@ -36,11 +36,11 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        echo issue check
-        GITHUB_ISSUE_EVENT_PATH="$(mktemp /tmp/github_issue.XXXXXXX.json)"
-        if gh pr view ${{ github.event.issue.number }} --json id,number,headRefOid,headRefName > "$GITHUB_ISSUE_EVENT_PATH"; then
-            PR_HEAD_REF="$(jq -r .headRefName "$GITHUB_ISSUE_EVENT_PATH")"
-            PR_HEAD_SHA="$(jq -r .headRefOid "$GITHUB_ISSUE_EVENT_PATH")"
+        echo determining pr head ref, sha and num from Github Issue event
+        GITHUB_ISSUE_PR_PATH="$(mktemp /tmp/github_issue_pr.XXXXXXX.json)"
+        if gh pr view ${{ github.event.issue.number }} --json id,number,headRefOid,headRefName > "$GITHUB_ISSUE_PR_PATH"; then
+            PR_HEAD_REF="$(jq -r .headRefName "$GITHUB_ISSUE_PR_PATH")"
+            PR_HEAD_SHA="$(jq -r .headRefOid "$GITHUB_ISSUE_PR_PATH")"
             PR_NUM="${{ github.event.issue.number }}"
             echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
             echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
@@ -48,12 +48,12 @@ runs:
         fi
 
     - name: PR Check
-      if: ${{ github.event_name == 'pull_request' }}
+      if: ${{ github.event_name == 'pull_request' && (env.PR_HEAD_REF == '' || env.PR_HEAD_SHA == '' || env.PR_NUM == '') }}
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        echo pr check
+        echo determining pr head ref, sha and num from Github PullRequest event
         PR_HEAD_REF="${{ github.event.pull_request.head.ref }}"
         PR_HEAD_SHA="${{ github.event.pull_request.head.sha }}"
         PR_NUM="${{ github.event.pull_request.number }}"
@@ -61,17 +61,37 @@ runs:
         echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
         echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
 
-    - name: Set build variables
-      id: build_vars
+    - name: Workflow Dispatch Check
+      if: ${{ github.event_name == 'workflow_dispatch' && (env.PR_HEAD_REF == '' || env.PR_HEAD_SHA == '' || env.PR_NUM == '') }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo determining pr head ref, sha and num from Github Workflow Dispatch event
+        PR_HEAD_REF="${{ github.ref_name }}"
+        GITHUB_ISSUE_PR_PATH="$(mktemp /tmp/github_issue_pr.XXXXXXX.json)"
+        if gh pr view "$PR_HEAD_REF" --json id,number,headRefOid,headRefName > "$GITHUB_ISSUE_PR_PATH"; then
+            PR_HEAD_SHA="$(jq -r .headRefOid "$GITHUB_ISSUE_PR_PATH")"
+            PR_NUM="$(jq -r .number "$GITHUB_PR_PATH")"
+            echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
+            echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
+            echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
+        fi
+        echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
+        echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
+        echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
+
+    - name: Checked out branch check
+      if: ${{ env.PR_HEAD_REF == '' || env.PR_HEAD_SHA == '' || env.PR_NUM == '' }}
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         OWNER: ${{ github.repository_owner }}
       run: |
-        echo running final checks
         echo "PR_HEAD_REF: $PR_HEAD_REF"
         echo "PR_HEAD_SHA: $PR_HEAD_SHA"
         echo "PR_NUM: $PR_NUM"
+        echo trying to determine pr head ref, sha and num from the checked out branch
         CHECKED_OUT_BRANCH="$(git branch --show-current)"
         if [ -n "$CHECKED_OUT_BRANCH" ]; then
           GITHUB_PR_PATH="$(mktemp /tmp/github_pr.XXXXXXX.json)"
@@ -84,18 +104,36 @@ runs:
               echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
           fi
         fi
-        echo possibly defaulting to last merged pr
+
+    - name: Last merged PR check fallback
+      if: ${{ env.PR_HEAD_REF == '' || env.PR_HEAD_SHA == '' || env.PR_NUM == '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        OWNER: ${{ github.repository_owner }}
+      run: |
         echo "PR_HEAD_REF: $PR_HEAD_REF"
         echo "PR_HEAD_SHA: $PR_HEAD_SHA"
         echo "PR_NUM: $PR_NUM"
         if [ -z "$PR_HEAD_SHA" ] || [ -z "$PR_NUM" ] || [ -z "$PR_HEAD_REF" ] ; then
-          echo using the default branch pr context
+          echo using the last merged PR in main to determine pr head ref, sha and num
           LATEST_MERGED_FEATURE_PR="$(git log --format='%H %s' --perl-regexp --author='^((?!volvo-github-actions-app\[bot\]).*)$' -n 1)"
           echo "$LATEST_MERGED_FEATURE_PR"
           PR_HEAD_REF="main"
           PR_NUM="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $(NF)}' | grep -o '(#[0-9]\+)' | grep -o '[0-9]\+' || echo "0")"
           PR_HEAD_SHA="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $1}')"
         fi
+
+    - name: Set build variables
+      id: build_vars
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        OWNER: ${{ github.repository_owner }}
+      run: |
+        echo "PR_HEAD_REF: $PR_HEAD_REF"
+        echo "PR_HEAD_SHA: $PR_HEAD_SHA"
+        echo "PR_NUM: $PR_NUM"
 
         PR_SHORT_SHA="${PR_HEAD_SHA::7}"
         TIMESTAMP="$(date +'%Y%m%dT%H%M%S')"
