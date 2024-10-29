@@ -14,7 +14,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - name: set vars
+      id: build_vars
+      uses: ./.github/actions/set-build-variables
+      with:
+        build_type: feature
+
+    - name: dump variables
+      run: |
+        echo ----------------------------------------------------------- BUILD VARS --------------------------------------------------------------------
+        echo '${{ toJson(steps.build_vars.outputs) }}' | jq .
+        echo -------------------------------------------------------------- ENV ------------------------------------------------------------------------
+        env
+        echo ------------------------------------------------------------ GITHUB -----------------------------------------------------------------------
+        echo '${{ toJson(github) }}' | jq .
     - run: |
         echo build
         gh workflow run release.yaml -f environment=development -f build_new_release=true
