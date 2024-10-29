@@ -115,14 +115,16 @@ runs:
         echo "PR_HEAD_REF: $PR_HEAD_REF"
         echo "PR_HEAD_SHA: $PR_HEAD_SHA"
         echo "PR_NUM: $PR_NUM"
-        if [ -z "$PR_HEAD_SHA" ] || [ -z "$PR_NUM" ] || [ -z "$PR_HEAD_REF" ] ; then
-          echo using the last merged PR in main to determine pr head ref, sha and num
-          LATEST_MERGED_FEATURE_PR="$(git log --format='%H %s' --perl-regexp --author='^((?!volvo-github-actions-app\[bot\]).*)$' -n 1)"
-          echo "$LATEST_MERGED_FEATURE_PR"
-          PR_HEAD_REF="main"
-          PR_NUM="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $(NF)}' | grep -o '(#[0-9]\+)' | grep -o '[0-9]\+' || echo "0")"
-          PR_HEAD_SHA="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $1}')"
-        fi
+        echo using the last merged PR in main to determine pr head ref, sha and num
+        LATEST_MERGED_FEATURE_PR="$(git log --format='%H %s' --perl-regexp --author='^((?!volvo-github-actions-app\[bot\]).*)$' -n 1)"
+        echo "$LATEST_MERGED_FEATURE_PR"
+        PR_HEAD_REF="main"
+        PR_NUM="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $(NF)}' | grep -o '(#[0-9]\+)' | grep -o '[0-9]\+' || echo "0")"
+        PR_HEAD_SHA="$(echo "$LATEST_MERGED_FEATURE_PR" | awk -F ' ' '{print $1}')"
+
+        echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
+        echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
+        echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
 
     - name: Set build variables
       id: build_vars
