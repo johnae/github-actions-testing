@@ -72,7 +72,7 @@ runs:
         GITHUB_ISSUE_PR_PATH="$(mktemp /tmp/github_issue_pr.XXXXXXX.json)"
         if gh pr view "$PR_HEAD_REF" --json id,number,headRefOid,headRefName > "$GITHUB_ISSUE_PR_PATH"; then
             PR_HEAD_SHA="$(jq -r .headRefOid "$GITHUB_ISSUE_PR_PATH")"
-            PR_NUM="$(jq -r .number "$GITHUB_PR_PATH")"
+            PR_NUM="$(jq -r .number "$GITHUB_ISSUE_PR_PATH")"
             echo PR_HEAD_REF="$PR_HEAD_REF" | tee -a "$GITHUB_ENV"
             echo PR_HEAD_SHA="$PR_HEAD_SHA" | tee -a "$GITHUB_ENV"
             echo PR_NUM="$PR_NUM" | tee -a "$GITHUB_ENV"
